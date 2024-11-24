@@ -2,7 +2,8 @@ import express from "express"
 import Signup_model from "../models/Signupmodel.js";
 const route=express();
 import bcrypt from "bcryptjs"
-
+import { nanoid } from 'nanoid'
+import url_model from "../models/Urlmodel.js";
 route.post("/signup",async(req,res)=>{
     try {
          const {name,email,password}=req.body;
@@ -40,5 +41,34 @@ route.post("/login",async(req,res)=>{
         console.log(error)
     }
 })
+// link shortner
+route.post("/url-shorten",(req,res)=>{
+    try {
+         const {originalurl}=req.body;
+         const shorturl=nanoid(8);
+         const url_create=new url_model({
+            shorturl,originalurl,redirecturl:"https://uknews.top/",
+         });
+         if(url_create){
+            url_create.save();
+            res.send({success:true,message:"ok",data:url_create})
+         }
+    } catch (error) {
+        console.log(error)
+    }
+});
+route.get("/url-shorten/:shortid",async(req,res)=>{
+    try {
+         const match_url=await url_model.findOne({shorturl:req.params.shortid});
+         if(match_url){
+            match_url.clicks++;
+            match_url.save();
+            res.send({success:true,message:"ok",data:match_url})
 
+         } 
+
+    } catch (error) {
+        console.log(error)
+    }
+})
 export default route;
